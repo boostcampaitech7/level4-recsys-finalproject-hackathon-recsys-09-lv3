@@ -9,3 +9,5 @@ datahub/item2users/*.pkl
 pretrain_backbones/*
 !pretrain_backbones/.gitkeep
 datahub/movielens1M/ml-1m
+*.csv
+*.json
