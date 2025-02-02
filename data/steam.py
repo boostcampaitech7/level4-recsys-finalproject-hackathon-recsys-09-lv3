@@ -62,7 +62,7 @@ class SteamColdStartDataLoader(object):
             else:
                 self.dataloaders[key] = DataLoader(SteambaseDataset(dataset_name, df, self.description, device), batch_size=bsz, shuffle=False)
         self.keys = list(self.dataloaders.keys())
-        self.item_features = ['app_id']
+        self.item_features = ['item_id']
                                 
 
     def __getitem__(self, name):
