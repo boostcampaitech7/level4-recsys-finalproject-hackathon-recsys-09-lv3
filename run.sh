@@ -2,6 +2,22 @@
 
 # --pretrain_model_path pretrain_backbones 지정하여 backbone 모델 저장 및 불러오기
 
+##################################### STEAM ##########################################
+######### steam * deepfm #########
+# Dataset: steam Backbone: deepfm Warmup_model: None
+python main.py --dataset_name steam --model_name deepfm  --warmup_model base --pretrain_model_path pretrain_backbones
+# Dataset: steam Backbone: deepfm Warmup_model: DropoutNet 
+python main.py --dataset_name steam --model_name deepfm  --warmup_model base  --is_dropoutnet True --pretrain_model_path pretrain_backbones
+# Dataset: steam Backbone: deepfm Warmup_model: Meta-Embedding
+python main.py --dataset_name steam --model_name deepfm  --warmup_model metaE --pretrain_model_path pretrain_backbones
+# Dataset: steam Backbone: deepfm Warmup_model: MWUF
+python main.py --dataset_name steam --model_name deepfm  --warmup_model mwuf --pretrain_model_path pretrain_backbones
+# Dataset: steam Backbone: deepfm Warmup_model: CVAR(Init Only)
+python main.py --dataset_name steam --model_name deepfm  --warmup_model cvar_init --cvar_iters 10 --pretrain_model_path pretrain_backbones
+# Dataset: steam Backbone: deepfm Warmup_model: CVAR
+python main.py --dataset_name steam --model_name deepfm  --warmup_model cvar --cvar_iters 10 --pretrain_model_path pretrain_backbones
+
+
 ##################################### Data Points in Table 1 ##########################################
 ######### movielens1M * deepfm #########
 # Dataset: movielens1M Backbone: deepfm Warmup_model: None

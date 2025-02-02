@@ -6,7 +6,7 @@ import random
 import numpy as np
 from sklearn.metrics import roc_auc_score, f1_score
 import argparse
-from data import MovieLens1MColdStartDataLoader, TaobaoADColdStartDataLoader
+from data import MovieLens1MColdStartDataLoader, TaobaoADColdStartDataLoader, SteamColdStartDataLoader
 from model import FactorizationMachineModel, WideAndDeep, DeepFactorizationMachineModel, AdaptiveFactorizationNetwork, ProductNeuralNetworkModel
 from model import AttentionalFactorizationMachineModel, DeepCrossNetworkModel, MWUF, MetaE, CVAR
 from model.wd import WideAndDeep
@@ -14,7 +14,7 @@ from model.wd import WideAndDeep
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--pretrain_model_path', default='')
-    parser.add_argument('--dataset_name', default='taobaoAD', help='required to be one of [movielens1M, taobaoAD]')
+    parser.add_argument('--dataset_name', default='taobaoAD', help='required to be one of [movielens1M, taobaoAD, steam]')
     parser.add_argument('--datahub_path', default='./datahub/')
     parser.add_argument('--warmup_model', default='cvar', help="required to be one of [base, mwuf, metaE, cvar, cvar_init]")
     parser.add_argument('--is_dropoutnet', type=bool, default=False, help="whether to use dropout net for pretrain")
@@ -28,7 +28,7 @@ def get_args():
     parser.add_argument('--weight_decay', type=float, default=1e-6)
     parser.add_argument('--device', default='cuda:0')
     parser.add_argument('--save_dir', default='chkpt')
-    parser.add_argument('--runs', type=int, default=3, help = 'number of executions to compute the average metrics')
+    parser.add_argument('--runs', type=int, default=1, help = 'number of executions to compute the average metrics')
     parser.add_argument('--seed', type=int, default=1234)
 
     args = parser.parse_args()
@@ -40,6 +40,8 @@ def get_loaders(name, datahub_path, device, bsz, shuffle):
         dataloaders = MovieLens1MColdStartDataLoader(name, path, device, bsz=bsz, shuffle=shuffle)
     elif name == 'taobaoAD':
         dataloaders = TaobaoADColdStartDataLoader(name, path, device, bsz=bsz, shuffle=shuffle)
+    elif name == 'steam':
+        dataloaders = SteamColdStartDataLoader(name, path, device, bsz=bsz, shuffle=shuffle)
     else:
         raise ValueError('unkown dataset name: {}'.format(name))
     return dataloaders

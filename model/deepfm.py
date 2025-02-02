@@ -79,7 +79,7 @@ class DeepFactorizationMachineModel(torch.nn.Module):
             else:
                 raise ValueError('unkwon feature: {}'.format(name))
         emb = torch.concat([item_id_emb] + embs, dim=1)
-        linear_part = torch.concat(linears, dim=1).sum(dim=1, keepdims=True)
+        linear_part = torch.concat(linears, dim=1).sum(dim=1, keepdims=True) if linears else 0
         res = (linear_part + self.fm(emb) + self.mlp(emb.view(-1, self.embed_output_dim))).squeeze(dim=1)
         return torch.sigmoid(res)
 
