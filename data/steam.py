@@ -62,7 +62,7 @@ class SteamColdStartDataLoader(object):
             else:
                 self.dataloaders[key] = DataLoader(SteambaseDataset(dataset_name, df, self.description, device), batch_size=bsz, shuffle=False)
         self.keys = list(self.dataloaders.keys())
-        self.item_features = ['item_id', 'count']
+        self.item_features = ['item_id', 'count', 'date_release', 'positive_ratio']
                                 
 
     def __getitem__(self, name):

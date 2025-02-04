@@ -8,9 +8,14 @@ class DeepFactorizationMachineModel(torch.nn.Module):
     def __init__(self, description, embed_dim, mlp_dims, dropout, item_id_name='item_id'):
         super().__init__()
         # assert len(description) == 12, 'unillegal format of {}'.format(description)
-        self.features = [name for name, _, type in description if type != 'label']
+        orders = [name for name, _, _ in description] # description에 있는 feature 전부 쓰기
+        
+        # 아래는 feature 선택하기 위해 직접 설정하는 부분. feature selection하려면 아래 order 고쳐서 사용
+        # orders = ['user_id', 'item_id', 'hours', 'date_release', 'positive_ratio', 'price_final', 'price_original', 'peak_ccu', 'required_age', 'price', 'metacritic_score', 'date', 'interaction', 'date', 'count']
+        # orders = ['user_id', 'item_id', 'interaction']
+        self.features = [name for name, _, type in description if (type != 'label') & (name in orders)]
         assert item_id_name in self.features, 'unkown item id name'
-        self.description = {name: (size, type) for name, size, type in description}
+        self.description = {name: (size, type) for name, size, type in description if name in self.features}
         self.item_id_name = item_id_name
         self.build(embed_dim, mlp_dims, dropout)
     
@@ -29,6 +34,9 @@ class DeepFactorizationMachineModel(torch.nn.Module):
                 self.embed_output_dim += embed_dim
             elif type == 'seq':
                 self.emb_layer[name] = torch.nn.Embedding(size, embed_dim)
+                self.embed_output_dim += embed_dim
+            elif type == 'emb':
+                self.emb_layer[name] = torch.nn.Linear(size, embed_dim, bias=False)
                 self.embed_output_dim += embed_dim
             elif type == 'label':
                 pass
@@ -76,6 +84,8 @@ class DeepFactorizationMachineModel(torch.nn.Module):
                 linears.append(self.ctn_linear_layer[name](x))
             elif type == 'seq':
                 embs.append(self.emb_layer[name](x).sum(dim=1, keepdims=True))
+            elif type == 'emb':
+                embs.append(self.emb_layer[name](x))
             else:
                 raise ValueError('unkwon feature: {}'.format(name))
         emb = torch.concat([item_id_emb] + embs, dim=1)
