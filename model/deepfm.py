@@ -11,9 +11,10 @@ class DeepFactorizationMachineModel(torch.nn.Module):
         orders = [name for name, _, _ in description] # description에 있는 feature 전부 쓰기
         
         # 아래는 feature 선택하기 위해 직접 설정하는 부분. feature selection하려면 아래 order 고쳐서 사용
-        # orders = ['user_id', 'item_id', 'hours', 'date_release', 'positive_ratio', 'price_final', 'price_original', 'peak_ccu', 'required_age', 'price', 'metacritic_score', 'date', 'interaction', 'date', 'count']
-        # orders = ['user_id', 'item_id', 'interaction']
-        self.features = [name for name, _, type in description if (type != 'label') & (name in orders)]
+        orders = ['user_id', 'item_id', 'hours', 'date_release', 'positive_ratio', 'price_final', 'price_original', 'peak_ccu', 'required_age', 'price', 'metacritic_score', 'tag_embedding', 'category_embedding', 'date', 'count', 'interaction']
+        # orders = ['user_id', 'item_id', 'interaction', 'count']
+        blacklist=[]
+        self.features = [name for name, _, type in description if (type != 'label') & (name in orders) & (name not in blacklist)]
         assert item_id_name in self.features, 'unkown item id name'
         self.description = {name: (size, type) for name, size, type in description if name in self.features}
         self.item_id_name = item_id_name
@@ -85,7 +86,7 @@ class DeepFactorizationMachineModel(torch.nn.Module):
             elif type == 'seq':
                 embs.append(self.emb_layer[name](x).sum(dim=1, keepdims=True))
             elif type == 'emb':
-                embs.append(self.emb_layer[name](x))
+                embs.append(self.emb_layer[name](x).unsqueeze(1))
             else:
                 raise ValueError('unkwon feature: {}'.format(name))
         emb = torch.concat([item_id_emb] + embs, dim=1)
