@@ -27,6 +27,8 @@ class SteambaseDataset(Dataset):
                 self.name2array[name] = self.name2array[name].to(torch.long)
             elif type == 'ctn':
                 self.name2array[name] = self.name2array[name].to(torch.float32)
+            elif type == 'emb':
+                self.name2array[name] = self.name2array[name].to(torch.float32)
             elif type == 'label':
                 pass
             else:
