@@ -50,16 +50,20 @@ class MetaE(nn.Module):
         self.item_id_name = item_id_name
         self.item_features = []
         output_embedding_size = 0
+        # In MetaE's build method
         for item_f in item_features:
-            assert item_f in model.features, "unkown feature: {}".format(item_f)
+            assert item_f in model.features, "unknown feature: {}".format(item_f)
             type = self.model.description[item_f][1]
             if type == 'spr' or type == 'seq':
                 output_embedding_size += emb_dim
             elif type == 'ctn':
                 output_embedding_size += 1
+            elif type == 'emb':
+                # Add the embedding dimension from the feature's description
+                output_embedding_size += self.model.description[item_f][0]
             else:
-                raise ValueError('illegal feature tpye for warm: {}'.format(item_f))
-            self.item_features.append(item_f) 
+                raise ValueError('illegal feature type for warm: {}'.format(item_f))
+            self.item_features.append(item_f)
 
         self.itemid_generator = nn.Sequential(
             nn.Linear(output_embedding_size, 16),
@@ -84,6 +88,7 @@ class MetaE(nn.Module):
     def warm_item_id(self, x_dict):
         # get embedding of item features
         item_embs = []
+       # In MetaE's warm_item_id method
         for item_f in self.item_features: 
             type = self.model.description[item_f][1]
             x = x_dict[item_f]
@@ -92,10 +97,11 @@ class MetaE(nn.Module):
             elif type == 'ctn':
                 emb = x
             elif type == 'seq':
-                emb = self.model.emb_layer[item_f](x) \
-                        .sum(dim=1, keepdim=True).squeeze()
+                emb = self.model.emb_layer[item_f](x).sum(dim=1, keepdim=True).squeeze()
+            elif type == 'emb':
+                emb = x  # Use precomputed embedding directly
             else:
-                raise ValueError('illegal feature tpye for warm: {}'.format(item_f))
+                raise ValueError('illegal feature type for warm: {}'.format(item_f))
             item_embs.append(emb)
         # sideinfo_emb = torch.mean(torch.stack(item_embs, dim=1), dim=1)
         sideinfo_emb = torch.concat(item_embs, dim=1)
@@ -138,16 +144,21 @@ class MWUF(nn.Module):
         self.item_id_name = item_id_name
         self.item_features = []
         self.output_emb_size = 0
+        # In MWUF's build method
+        print(model.features)
         for item_f in item_features:
-            assert item_f in model.features, "unkown feature: {}".format(item_f)
+            assert item_f in model.features, "unknown feature: {}".format(item_f)
             type = self.model.description[item_f][1]
             if type == 'spr' or type == 'seq':
                 self.output_emb_size += emb_dim
             elif type == 'ctn':
                 self.output_emb_size += 1
+            elif type == 'emb':
+                # Add the actual embedding dimension
+                self.output_emb_size += self.model.description[item_f][0]
             else:
-                raise ValueError('illegal feature tpye for warm: {}'.format(item_f))
-            self.item_features.append(item_f) 
+                raise ValueError('illegal feature type for warm: {}'.format(item_f))
+            self.item_features.append(item_f)
         item_emb = self.model.emb_layer[self.item_id_name]
         new_item_emb = torch.mean(item_emb.weight.data, dim=0, keepdims=True) \
                             .repeat(item_emb.num_embeddings, 1)
@@ -204,6 +215,7 @@ class MWUF(nn.Module):
         if user_emb.sum() == 0:
             user_emb = self.model.emb_layer['user_id'](x_dict['user_id']).squeeze()
         item_embs = []
+        # In MWUF's warm_item_id method
         for item_f in self.item_features: 
             type = self.model.description[item_f][1]
             x = x_dict[item_f]
@@ -212,10 +224,11 @@ class MWUF(nn.Module):
             elif type == 'ctn':
                 emb = x
             elif type == 'seq':
-                emb = self.model.emb_layer[item_f](x) \
-                        .sum(dim=1, keepdim=True).squeeze()
+                emb = self.model.emb_layer[item_f](x).sum(dim=1, keepdim=True).squeeze()
+            elif type == 'emb':
+                emb = x  # Use precomputed embedding directly
             else:
-                raise ValueError('illegal feature tpye for warm: {}'.format(item_f))
+                raise ValueError('illegal feature type for warm: {}'.format(item_f))
             item_embs.append(emb)
         item_emb = torch.concat(item_embs, dim=1).detach()
         # warm
@@ -295,6 +308,8 @@ class CVAR(nn.Module):
                 self.warmup_emb_layer["warmup_{}".format(item_f)] = nn.Embedding(size, emb_dim)
             elif type == 'ctn':
                 self.output_emb_size += 1
+            elif type == 'emb':
+                self.output_emb_size += size
             else:
                 raise ValueError('illegal feature tpye for warm: {}'.format(item_f))
             self.item_features.append(item_f) 
@@ -303,7 +318,7 @@ class CVAR(nn.Module):
         self.log_v_encoder = nn.Linear(emb_dim, 16)
         self.mean_encoder_p = nn.Linear(self.output_emb_size, 16)
         self.log_v_encoder_p = nn.Linear(self.output_emb_size, 16)
-        self.decoder = nn.Linear(17, 16)
+        self.decoder = nn.Linear(16, 16)
         return
 
     def wasserstein(self, mean1, log_v1, mean2, log_v2):
@@ -350,6 +365,8 @@ class CVAR(nn.Module):
             elif type == 'seq':
                 emb = self.warmup_emb_layer[name](x) \
                         .sum(dim=1, keepdim=True).squeeze()
+            elif type == 'emb':
+                emb = x
             else:
                 raise ValueError('illegal feature tpye for warm: {}'.format(item_f))
             item_embs.append(emb)
@@ -361,9 +378,9 @@ class CVAR(nn.Module):
         reg_term = self.wasserstein(mean, log_v, mean_p, log_v_p)
         z = mean + 1e-4 * torch.exp(log_v * 0.5) * torch.randn(mean.size()).to(self.device)
         z_p = mean_p + 1e-4 * torch.exp(log_v_p * 0.5) * torch.randn(mean_p.size()).to(self.device)
-        freq = x_dict['count']
-        pred = self.decoder(torch.concat([z, freq], 1))
-        pred_p = self.decoder(torch.concat([z_p, freq], 1))
+        #freq = x_dict['count']
+        pred = self.decoder(z)
+        pred_p = self.decoder(z_p)
         recon_term = torch.square(pred - item_id_emb).sum(-1).mean()
         return pred_p, reg_term, recon_term
 
