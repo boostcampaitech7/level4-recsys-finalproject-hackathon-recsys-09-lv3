@@ -165,6 +165,31 @@ def pretrain(dataset_name,
     print("="*20, 'pretrain {}'.format(model_name), "="*20)
     return model, dataloaders
 
+def deepfm_only(model,
+                dataloaders,
+                model_name,
+                epoch,
+                lr,
+                weight_decay,
+                device,
+                save_dir):
+
+    print("*" * 20, "deepFM (train_base only)", "*" * 20)
+    device = torch.device(device)
+    save_dir = os.path.join(save_dir, model_name)
+    save_path = os.path.join(save_dir, 'model_only.pth')
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    # train_base 데이터를 이용하여 deepFM 전체 모델 학습
+    train_loader = dataloaders['train_base']
+    train(model, train_loader, device, epoch, lr, weight_decay, save_path)
+
+    # 학습된 deepFM 모델을 test 데이터셋에서 평가
+    auc, f1 = test(model, dataloaders['test'], device)
+    print("[deepFM only] evaluate on [test dataset] auc: {:.4f}, F1 score: {:.4f}".format(auc, f1))
+    return auc.item(), f1
+
 def base(model,
          dataloaders,
          model_name,
@@ -414,6 +439,8 @@ def cvar(model,
 def run(model, dataloaders, args, model_name, warm):
     if warm == 'base':
         auc_list, f1_list = base(model, dataloaders, model_name, args.epoch, args.lr, args.weight_decay, args.device, args.save_dir)
+    elif warm == 'deepfm_only':
+        auc_list, f1_list = deepfm_only(model, dataloaders, model_name, args.epoch, args.lr, args.weight_decay, args.device, args.save_dir)
     elif warm == 'mwuf':
         auc_list, f1_list = mwuf(model, dataloaders, model_name, args.epoch, args.lr, args.weight_decay, args.device, args.save_dir)
     elif warm == 'metaE': 
