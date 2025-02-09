@@ -207,13 +207,21 @@ def base(model,
     # data set list
     auc_list = []
     f1_list = []
-    dataset_list = ['train_warm_a', 'train_warm_b', 'train_warm_c', 'test']
+    dataset_list = [
+        'train_warm_a',
+        #'train_warm_b',
+        #'train_warm_c',
+        #'train_warm_d',
+        #'train_warm_e',
+        #'train_warm_f',
+        'test'  
+    ]
     for i, train_s in enumerate(dataset_list):
         auc, f1 = test(model, dataloaders['test'], device)
         auc_list.append(auc.item())
         f1_list.append(f1)
         print("[base model] evaluate on [test dataset] auc: {:.4f}, F1 socre: {:.4f}".format(auc, f1))
-        if i < 3:
+        if i < len(dataset_list) - 1:
             model.only_optimize_itemid()
             train(model, dataloaders[train_s], device, epoch, lr, weight_decay, save_path)
     print("*"*20, "base", "*"*20)
@@ -269,7 +277,15 @@ def metaE(model,
         indexes = features[metaE_model.item_id_name].squeeze()
         origin_item_id_emb[indexes, ] = warm_item_id_emb
     # test by steps 
-    dataset_list = ['train_warm_a', 'train_warm_b', 'train_warm_c', 'test']
+    dataset_list = [
+        'train_warm_a',
+        #'train_warm_b',
+        #'train_warm_c',
+        #'train_warm_d',
+        #'train_warm_e',
+        #'train_warm_f',
+        'test'  
+    ]
     auc_list = []
     f1_list = []
     for i, train_s in enumerate(dataset_list):
@@ -347,7 +363,15 @@ def mwuf(model,
         indexes = features[mwuf_model.item_id_name].squeeze()
         origin_item_id_emb[indexes, ] = warm_item_id_emb
     # test by steps 
-    dataset_list = ['train_warm_a', 'train_warm_b', 'train_warm_c', 'test']
+    dataset_list = [
+        'train_warm_a',
+        #'train_warm_b',
+        #'train_warm_c',
+        #'train_warm_d',
+        #'train_warm_e',
+        #'train_warm_f',
+        'test'  
+    ]
     auc_list = []
     f1_list = []
     for i, train_s in enumerate(dataset_list):
@@ -419,7 +443,15 @@ def cvar(model,
             origin_item_id_emb[indexes, ] = warm_item_id_emb
     warm_up(train_base, epochs=1, iters=cvar_iters, logger=True)
     # test by steps 
-    dataset_list = ['train_warm_a', 'train_warm_b', 'train_warm_c', 'test']
+    dataset_list = [
+        'train_warm_a',
+        #'train_warm_b',
+        #'train_warm_c',
+        #'train_warm_d',
+        #'train_warm_e',
+        #'train_warm_f',
+        'test'  
+    ]
     auc_list, f1_list = [], []
     for i, train_s in enumerate(dataset_list):
         print("#"*10, dataset_list[i],'#'*10)
