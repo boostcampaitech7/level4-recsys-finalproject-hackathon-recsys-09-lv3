@@ -1,92 +1,81 @@
-# CVAR
-
-================================================
-
-by XuZhao (<xuzzzhao@tencent.com>)
+# 🍀루키비키자나 TVING 해커톤
 
 Overview
 --------
+추천 시스템은 사용자 이력을 바탕으로 사용자가 선호하는 아이템을 예측하나, 데이터 정보가 충분하지 않은 경우 적합한 추천을 하지 못하게 되는 이른바 cold start 문제가 발생한다. 
 
-PyTorch implementation of our paper "Improving Item Cold-start Recommendation via Model-agnostic Conditional Variational Autoencoder" accepted by SIGIR 2022.
+이러한 Cold Start Problem 중 **신규 출시되어 인터렉션이 적은 아이템들**의 Cold Start문제에 집중하여 item id embedding을 개선하는 3가지 방법론을 적용한다.
 
-
-Dependencies
-------------
-
-Install Pytorch 1.10.0, using pip or conda, should resolve all dependencies.
-
-Install Pandas 2.2.3
-
-Tested with Python 3.8.5, but should work with 3.x as well.
-
-Tested with sklearn 0.0.
-
-Tested on CPU or GPU.
 
 Dataset
 -------
-
-You can download the datasets we introduced in our paper from following links:
-* [Movielens1M](http://files.grouplens.org/datasets/movielens/)
-* [TaobaoAD](https://tianchi.aliyun.com/dataset/dataDetail?dataId=56)
-
-Raw data need to be preprocessed before using. The data preprocessing scripts are given in `datahub/movielens1M/movielens1M_preprocess.ipynb` and `datahub/taobaoAd/taobaoAD_preprocess.ipynb` for movielens1M and taobaoAD respectively.
+### Steam Games Review Dataset
+- https://www.kaggle.com/datasets/fronkongames/steam-games-dataset/data
+- https://github.com/kang205/SASRec
+```
+# Interaction: 14,529,074
+# Users:       680,812
+# Items:       37,141
+```
 
 How to Use
 ----------
-### how to start
-1. movielens-1m 데이터셋을 다운받아 아래 폴더 구조처럼 압축해제
+1. Steam 데이터셋을 다운받아 아래 폴더 구조처럼 압축해제
 ```
 datahub
-└─ movielens1M            
-    └─ ml-1m
-        ├─ ratings.dat
-        ├─ movies.dat
-        └─ users.dat                 
+└─ steam      
+    ├─ inter.csv
+    └─ item.csv
 ```
-2. `datahub/movielens1M/movielens1M_preprocess.ipynb` 코드 전체 실행
-3. 터미널에서 `run.sh` 내 shell script 실행
+2. `datahub/steam/steam_preprocessing.py` 코드 전체 실행
+3. `datahub/steam/` 내에 `emb_warm_split_preprocess.pkl` 파일과 `steam_data.pkl` 파일 생성 확인
+4. 터미널에서 `run.sh` 내 shell script 실행
+### 실행 command
+```
+python main.py --dataset_name steam --model_name deepfm  --warmup_model base --pretrain_model_path pretrain_backbones
+```
+model 중 DeepFM만을 리팩토링하여 사용함
 
-### file & parameters
-`model/*`: Implementation of various backbone models.
+기본 random seed는 **1234**
 
-`model/warm.py`: Implementation of three warm-up models. 
+최종 결과는 --run 10
 
-`main.py`: Start Point of experiment.
 
-You can conduct experiments as following command:
-<br>
-<br>
-`python main.py --dataset_name movielens1M  --model_name deepfm --warmup_model cvar  --cvar_iters 10`
-<br>
-<br>
-`python main.py --dataset_name taobaoAD  --model_name deepfm  --warmup_model cvar  --cvar_iters 1`
-<br>
-<br>
-Notice that the hyperparameter *--cvar_iters* is set 10 for movielens1M dataset while 1 for taobaoAD dataset. 
+Files & Parameters
+----------
+### Files
+`model/*`: 다양한 backbone 모델의 구현
 
-Moreover, the command to get every data point in our paper is given in  `./run.sh`, including some hyperparameters and random seed setting. Default random seed is **1234**. 
+`model/warm.py`: 3가지 warm-up 모델의 구현
 
-The program will print the AUC, F1 in cold-start stage and three warm-up stages. Part of settable parameters are listed as follows:
+`main.py`: train, test 함수를 통해 실험 실행
+
+`pretrain_backbones`: backbone 모델의 pretrain 파라미터 pickle 파일이 저장되는 폴더
+
+
+The program will print the AUC, F1 in cold-start stage and three warm-up stages.
+
+### Parameters
+
+본 프로젝트에서 사용한 코드를 기준으로 한 parameter 설명입니다.
 
 Parameter | Options | Usage
 --------- | ------- | -----
---dataset_name |  | Specify the dataset for evaluation
---dataset_path | | Specify the dataset path for evaluation
---model_name | [fm, deepfm, wd, dcn, ipnn, opnn] | Specify the backbone for recommendation 
+--dataset_name | [steam] | Specify the dataset for evaluation
+--model_name | [deepfm] | Specify the backbone for recommendation 
 --warmup_model |[base, mwuf, metaE, cvar_init, cvar] | Specify the warm-up method
 --is_dropoutnet | [True, False] | Specify whether to use dropoutNet for backbone pretraining
 --device | [cpu, cuda:0] | Specify the device (CPU or GPU) to run the program
---runs | | Specify the number of executions to compute average metrics
+--runs | default 1 | Specify the number of executions to compute average metrics
+--cvar_iters | default 10 | iteration count of CVAR warm up model
+--pretrain_model_path | | Specify the path to store pretrained model's parameter pickle file
 
-Some other settable parameters could be found in the `./main.py` file.
+더 자세한 파라미터 설명 및 사용은 `./main.py` 파일을 참고하세요.
 
 
 Citation
 --------
-
-
-If you want to refer to our work, please cite our paper as:
+코드 baseline: by XuZhao (<xuzzzhao@tencent.com>)
 ```
 @inproceedings{zhao2022improving,
   title={Improving Item Cold-start Recommendation via Model-agnostic Conditional Variational Autoencoder},
@@ -95,3 +84,4 @@ If you want to refer to our work, please cite our paper as:
   year={2022},
 }
 ```
+
