@@ -124,7 +124,7 @@ Parameter | Options | Usage
 
 🔍 Citation
 --------
-코드 baseline: by XuZhao (<xuzzzhao@tencent.com>)
+코드 baseline: by XuZhao (<xuzzzhao@tencent.com>) [[link](https://github.com/BestActionNow/CVAR)]
 ```
 @inproceedings{zhao2022improving,
   title={Improving Item Cold-start Recommendation via Model-agnostic Conditional Variational Autoencoder},
