@@ -2,16 +2,35 @@ import torch
 
 from model.layers import FactorizationMachine, MultiLayerPerceptron
 
+from typing import List, Dict, Tuple
 
 class DeepFactorizationMachineModel(torch.nn.Module):
+    """
+    Deep Factorization Machine 모델.
 
-    def __init__(self, description, embed_dim, mlp_dims, dropout, item_id_name='item_id'):
+    :param description: 데이터셋의 feature 정보 (이름, 크기, 타입)
+    :param embed_dim: 임베딩 차원
+    :param mlp_dims: 다층 퍼셉트론 레이어 크기
+    :param dropout: 드롭아웃 비율
+    :param item_id_name: 아이템 ID 필드 이름 (기본값: 'item_id')
+    """
+
+    def __init__(
+        self, 
+        description: List[Tuple[str, int, str]], 
+        embed_dim: int, 
+        mlp_dims: List[int], 
+        dropout: float, 
+        item_id_name: str='item_id'
+    ):
+        
         super().__init__()
+        
         # assert len(description) == 12, 'unillegal format of {}'.format(description)
         orders = [name for name, _, _ in description] # description에 있는 feature 전부 쓰기
         
         # 아래는 feature 선택하기 위해 직접 설정하는 부분. feature selection하려면 아래 order 고쳐서 사용
-        orders = ['user_id', 'item_id', 'hours', 'date_release', 'positive_ratio', 'price_final', 'price_original', 'peak_ccu', 'required_age', 'price', 'metacritic_score', 'tag_embedding', 'category_embedding', 'date', 'count', 'interaction']
+        orders = ['user_id', 'item_id', 'interaction', 'unix_date', 'price_original', 'required_age', 'date_release_unix', 'count', 'tag_embedding', 'popular_developers']
         # orders = ['user_id', 'item_id', 'interaction', 'count']
         blacklist=[]
         self.features = [name for name, _, type in description if (type != 'label') & (name in orders) & (name not in blacklist)]
