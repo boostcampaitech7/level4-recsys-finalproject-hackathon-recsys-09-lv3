@@ -32,6 +32,8 @@ Overview
 🧐 How to Use
 ----------
 1. Steam 데이터셋을 다운받아 아래 폴더 구조처럼 압축해제
+- inter.csv   : [[link](https://drive.google.com/file/d/12tlT4MjENnG-UAROJKFVyvyHcnvubzFE/view?usp=drive_link)]
+- item.csv    : [[link](https://drive.google.com/file/d/1JejnD8HhBtMGscvLk31ae76YfAMSqyT3/view?usp=drive_link)]
 ```
 datahub
 └─ steam      
